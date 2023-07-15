@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dwz.Dao.StudentMapper">
+
+
+    <select id="getStudents_s_id" resultMap="Studentmapper" parameterType="String">
+        select EMS.student.s_id, EMS.student.c_id,
+               EMS.student.s_name,EMS.student.s_sex,
+               EMS.class.c_name
+        from EMS.student join EMS.class on class.c_id = student.c_id
+        where EMS.student.s_id = #{id}
+    </select>
+    <resultMap id="Studentmapper" type="com.dwz.Pojo.Student">
+        <result column="c_name" property="c_id"></result>
+    </resultMap>
+
+
+    <select id="getStudentList" resultType="com.dwz.Pojo.Student">
+        select *from EMS.student s
+    </select>
+
+
+
+    <select id="getCp_year" resultType="String">
+        select distinct EMS.course_plan.cp_year from EMS.course_plan
+    </select>
+
+
+    <select id="getTeachingClassId" resultType="String" parameterType="map">
+        SELECT EMS.grade_f.tc_id FROM EMS.grade_f,EMS.teaching_programme
+        WHERE grade_f.tc_id = teaching_programme.tc_id
+          AND cp_year = #{cp_year}
+          AND s_id = #{s_id};
+    </select>
+
+
+    <select id="getTeacherclass1" resultMap="TeachingClassMapper" parameterType="String" >
+        select EMS.teaching_programme.tc_id ,EMS.teaching_class.tc_name,
+               EMS.teaching_class.tc_point,EMS.teaching_class.tc_time,
+               EMS.teaching_class.tc_num ,EMS.course.curse_name
+        from EMS.teaching_programme ,EMS.teaching_class, EMS.course
+        where EMS.teaching_class.tc_id = EMS.teaching_programme.tc_id
+        and EMS.teaching_programme.course_id = EMS.course.course_id
+        and teaching_programme.tc_id = #{tc_id}
+    </select>
+    <resultMap id="TeachingClassMapper" type="com.dwz.Pojo.Teacher_class">
+        <result column="tc_id" property="tc_id"/>
+        <result column="tc_name" property="tc_name"/>
+        <result column="curse_name" property="curse_name"/>
+        <result column="tc_time" property="tc_time"/>
+        <result column="tc_point" property="tc_point"/>
+        <result column="tc_num" property="tc_num"/>
+    </resultMap>
+    <select id="getTeacherclass2" parameterType="map" resultMap="TeachingClassMapper">
+        SELECT EMS.teaching_programme.tc_id,
+               EMS.teaching_class.tc_name,
+               EMS.course.curse_name,
+               EMS.teaching_class.tc_time,
+               EMS.teaching_class.tc_point,
+               EMS.teaching_class.tc_num
+        FROM EMS.teaching_class,EMS.teaching_programme,EMS.course
+        WHERE teaching_class.tc_id = teaching_programme.tc_id
+        AND
+        teaching_programme.course_id = course.course_id
+        AND
+        <foreach collection="teachingClassIdList" item="teachingClassId" open="(" close=")" separator="or">
+            teaching_programme.tc_id = #{teachingClassId}
+        </foreach>
+    </select>
+
+
+    <select id="getSelectCourse" parameterType="String" resultMap="SelectCourse">
+        select EMS.teaching_programme.cp_year AS cp_year,
+               EMS.teaching_programme.cp_class AS cp_class,
+               EMS.course.curse_name AS course_name,
+               EMS.teaching_programme.tc_id AS tc_id,
+               EMS.teaching_class.tc_name AS tc_name,
+               EMS.course.course_credit AS course_credit,
+               EMS.teacher.t_name AS t_name,
+               EMS.teaching_class.tc_point AS tc_point,
+               EMS.teaching_class.tc_time AS tc_time
+        from ((((EMS.teaching_programme join EMS.teaching_class) join EMS.course) join EMS.teacher_techering_class) join EMS.teacher)
+        where ((teaching_programme.tc_id = teaching_class.tc_id)
+            and (teaching_programme.course_id = course.course_id)
+            and (teaching_programme.tc_id = teacher_techering_class.tc_id)
+            and (teacher_techering_class.t_id = EMS.teacher.t_id)
+            and (course.course_type = '必修'))
+            and (cp_year = #{cp_year})
+    </select>
+    <resultMap id="SelectCourse" type="com.dwz.Pojo.Seclet_Course">
+        <result column="tc_name" property="teacherClass"/>
+        <result column="course_credit" property="credit"/>
+        <result column="t_name" property="teacherName"/>
+        <result column="tc_time" property="courseTime"/>
+        <result column="tc_point" property="coursePoint"/>
+        <result column="course_name" property="courseName"/>
+        <result column="cp_class" property="cpClass"/>
+    </resultMap>
+
+
+    <select id="getTeachingclassIdbyName" parameterType="String" resultType="String">
+        SELECT EMS.teaching_class.tc_id FROM EMS.teaching_class WHERE tc_name = #{tc_name}
+    </select>
+
+
+    <insert id="addCourse" parameterType="String">
+        INSERT INTO `EMS`.`grade_f` VALUES (#{tc_name},#{s_id},NULL,NULL,NULL)
+    </insert>
+
+
+    <select id="GetGradeList" resultMap="GradeMapper" parameterType="map">
+        select `grade_f`.`s_id` AS `s_id`,
+               `student`.`s_name` AS `s_name`,
+               `course`.`curse_name` AS `course_name`,
+               `grade_f`.`g_ps` AS `g_ps`,
+               `grade_f`.`g_exam` AS `g_exam`,
+               `grade_f`.`g_final` AS `g_final`,
+               `teaching_programme`.`cp_year` AS `cp_year`
+        from (((EMS.`grade_f` join EMS.`teaching_programme`) join EMS.`student`) join EMS.`course`)
+        where ((`grade_f`.`s_id` = `student`.`s_id`) and (`grade_f`.`tc_id` = `teaching_programme`.`tc_id`)
+            and (`course`.`course_id` = `teaching_programme`.`course_id`))
+            and(grade_f.s_id = #{sid} AND cp_year = #{cpYear})
+    </select>
+    <resultMap id="GradeMapper" type="com.dwz.Pojo.Grade">
+        <result column="s_id" property="s_id"/>
+        <result column="s_name" property="s_name"/>
+        <result column="course_name" property="course_name"/>
+        <result column="g_ps" property="g_ps"/>
+        <result column="g_exam" property="g_exam"/>
+        <result column="g_final" property="g_final"/>
+    </resultMap>
+
+
+
+    <select id="GetCourseName" parameterType="String" resultType="String">
+        SELECT curse_name
+        FROM EMS.teaching_programme
+                 JOIN EMS.grade_f ON teaching_programme.tc_id = grade_f.tc_id
+                 JOIN EMS.student ON grade_f.s_id = student.s_id
+                 JOIN EMS.course ON teaching_programme.course_id = course.course_id
+        WHERE grade_f.tc_id = #{tc_id}
+    </select>
+
+
+    <select id="GetOldPassword" parameterType="String" resultType="String">
+        select u_pwd from EMS.user where u_id = #{Sid}
+    </select>
+
+
+    <update id="UpdatePassword" parameterType="String">
+        UPDATE EMS.user SET u_pwd = #{newPassword} WHERE u_id = #{Sid}
+    </update>
+
+
+    <select id="GetAcademyName" parameterType="String" resultType="String">
+        SELECT academy.a_name
+        FROM EMS.academy JOIN EMS.department ON academy.a_id = department.a_id
+                     JOIN EMS.class ON class.d_id = department.d_id
+        WHERE class.c_name = #{ClassId}
+    </select>
+    
+    <select id="GetInform"  resultType="com.dwz.Pojo.Thing">
+        select * from EMS.thing
+    </select>
+</mapper>

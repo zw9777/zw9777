@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dwz.Dao.TeacherMapper">
+
+
+    <select id="getTeacher" parameterType="String" resultType="com.dwz.Pojo.Teacher">
+        select *from EMS.teacher t where t_id = #{t_id}
+    </select>
+
+
+
+    <select id="getTeacherList" resultType="com.dwz.Pojo.Teacher">
+        select *from EMS.teacher t
+    </select>
+
+
+
+    <select id="getTeacherProgramme" parameterType="map" resultMap="GetTeacherProgrammeMapper">
+        SELECT t_id,tc_name,tc_time,tc_point,cp_year FROM EMS.teacher_techering_class
+          JOIN EMS.teaching_class ON EMS.teacher_techering_class.tc_id = EMS.teaching_class.tc_id
+          JOIN EMS.teaching_programme ON EMS.teacher_techering_class.tc_id = teaching_programme.tc_id
+        where teacher_techering_class.t_id = #{t_id} and cp_year = #{cp_year}
+    </select>
+    <resultMap id="GetTeacherProgrammeMapper" type="com.dwz.Pojo.TeacherPlan">
+        <result column="tc_name" property="tc_name"/>
+        <result column="tc_time" property="tc_time"/>
+        <result column="tc_point" property="tc_point"/>
+    </resultMap>
+
+
+    <select id="GetGradeByClass" parameterType="String" resultMap="GetGradeMapper">
+        SELECT student.s_id,student.s_name,grade_f.g_ps,grade_f.g_exam,grade_f.g_final ,teaching_class.tc_name
+        FROM EMS.grade_f
+            JOIN EMS.student ON grade_f.s_id = student.s_id
+            JOIN EMS.teaching_class ON teaching_class.tc_id = grade_f.tc_id
+        where teaching_class.tc_name = #{tc_name}
+    </select>
+    <resultMap id="GetGradeMapper" type="com.dwz.Pojo.Grade">
+        <result column="s_id" property="s_id"/>
+        <result column="s_name" property="s_name"/>
+        <result column="course_name" property="course_name"/>
+        <result column="g_ps" property="g_ps"/>
+        <result column="g_exam" property="g_exam"/>
+        <result column="g_final" property="g_final"/>
+    </resultMap>
+
+
+    <update id="UpdateGrade" parameterType="map">
+        UPDATE EMS.grade_f SET g_ps = #{ps},g_exam = #{exam},g_final = #{final}
+        WHERE tc_id = #{tcId} AND s_id = #{sId}
+    </update>
+
+    <select id="getTeachingclassIdbyName" parameterType="String" resultType="String">
+        SELECT tc_id FROM EMS.teaching_class WHERE tc_name = #{tc_name}
+    </select>
+</mapper>

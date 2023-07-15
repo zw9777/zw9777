@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dwz.Dao.UserMapper">
+    <select id="getUserList" resultType="com.dwz.Pojo.User">
+        select *from EMS.user u
+    </select>
+    
+    <select id="getUserById" parameterType="String" resultType="com.dwz.Pojo.User">
+        select *from EMS.user u where u_id = #{u_id}
+    </select>
+
+    <select id="GetTeacherUser" resultType="com.dwz.Pojo.User">
+        SELECT `user`.u_id ,teacher.t_name,`user`.u_pwd ,`user`.u_status
+        FROM EMS.`user` join EMS.teacher on user.u_id = teacher.t_id
+        WHERE `user`.u_status RLIKE '^老'
+    </select>
+
+    <update id="UpdateTeacherUserPwd" parameterType="map" >
+        update EMS.user set u_pwd = #{pwd}
+        where u_id = #{t_id}
+    </update>
+
+    <select id="GetStudentUser" resultType="com.dwz.Pojo.User">
+        SELECT `user`.u_id ,student.s_name,`user`.u_pwd ,`user`.u_status
+        FROM EMS.`user` join EMS.student on user.u_id = student.s_id
+        WHERE `user`.u_status RLIKE '^学'
+    </select>
+
+
+    <update id="UpdateStudentUserPwd" parameterType="map" >
+        update EMS.user set u_pwd = #{pwd}
+        where u_id = #{t_id}
+    </update>
+
+    <insert id="AddStudentUser" parameterType="map" statementType="CALLABLE">
+        call EMS.s_add(#{id,mode=IN},#{sname,mode=IN},#{ssex,mode=IN})
+    </insert>
+
+    <insert id="AddTeacherUser" parameterType="map" statementType="CALLABLE">
+        call EMS.t_add(#{id,mode=IN},#{sname,mode=IN},#{ssex,mode=IN})
+    </insert>
+
+    <insert id="AddInform" parameterType="map">
+        INSERT INTO EMS.thing(thingtxt,tine,id,`year`) VALUES(#{thingtxt}, NOW(), #{id}, #{year})
+    </insert>
+
+    <delete id="DeleteInform" parameterType="String" >
+        delete from EMS.thing where id = #{id}
+    </delete>
+</mapper>
